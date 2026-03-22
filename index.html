@@ -3,170 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mezclador con Nombres - iPhone 12</title>
+    <title>Mezclador Pro - Guardado Local</title>
     <style>
-        :root {
-            --ios-blue: #007AFF;
-            --ios-green: #34C759;
-            --bg-color: #f2f2f7;
-        }
-        * { box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            text-align: center; 
-            background-color: var(--bg-color); 
-            margin: 0; 
-            padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom) 15px;
-        }
-        #app-container { max-width: 400px; margin: 0 auto; }
-        #video-container { 
-            position: relative; width: 100%; aspect-ratio: 1/1; 
-            margin: 15px auto; border-radius: 20px; overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2); background: #000;
+        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --bg: #f2f2f7; --ios-green: #34C759; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 15px 40px; }
+        
+        #preview-container { 
+            position: relative; width: 100%; aspect-ratio: 1; 
+            border-radius: 24px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
         }
         video { width: 100%; height: 100%; object-fit: cover; }
         #crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; 
-            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); 
-            z-index: 10; pointer-events: none;
+            position: absolute; top: 50%; left: 50%; width: 26px; height: 26px; 
+            border: 2.5px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
         }
-        .result-card { 
-            background: white; padding: 20px; border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
+
+        .section-title { font-weight: 700; margin: 20px 0 10px; text-align: left; font-size: 1rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; margin-bottom: 10px; scrollbar-width: none; }
+        .inventory::-webkit-scrollbar { display: none; }
+        
+        .paint-chip { 
+            min-width: 85px; background: white; padding: 12px; border-radius: 18px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; text-align: center;
+            transition: transform 0.2s;
         }
-        #color-name { font-size: 1.4rem; font-weight: 700; margin: 5px 0; color: #1c1c1e; }
-        #color-preview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 10px; border: 3px solid #eee; }
-        .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .ingredient { padding: 10px; border-radius: 10px; font-weight: 600; font-size: 0.9em; text-align: left; display: flex; justify-content: space-between; }
-        .ing-verde { background: #e8f5e9; color: #2e7d32; }
-        .ing-azul { background: #e3f2fd; color: #1565c0; }
-        .ing-amarillo { background: #fffde7; color: #f9a825; }
-        .ing-negro { background: #212121; color: white; }
-        .ing-blanco { background: #fff; color: #333; border: 1px solid #ddd; }
-        button { 
-            background: var(--ios-blue); color: white; border: none; padding: 16px; 
-            border-radius: 14px; font-size: 17px; font-weight: 600; width: 100%; margin-bottom: 10px;
+        .paint-chip:active { transform: scale(0.95); }
+        .paint-color { width: 45px; height: 45px; border-radius: 50%; margin: 0 auto 8px; border: 2px solid #f0f0f0; }
+        .paint-chip.disabled { opacity: 0.3; filter: grayscale(1); }
+        
+        .remove-btn { 
+            position: absolute; top: -5px; right: -5px; background: var(--ios-red); 
+            color: white; border-radius: 50%; width: 24px; height: 24px; 
+            font-size: 14px; border: 2px solid white; font-weight: bold;
         }
-        button.active { background: var(--ios-green); }
+
+        .result-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        #target-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        #target-dot { width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
+        
+        .recipe-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f5f5f5; font-weight: 600; font-size: 1.05rem; }
+
+        .controls { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 10px; }
+        button { border: none; padding: 16px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer; }
+        .btn-capture { background: var(--ios-blue); color: white; }
+        .btn-add { background: var(--ios-green); color: white; }
+        button:active { opacity: 0.8; }
     </style>
 </head>
 <body>
 
-<div id="app-container">
-    <div id="video-container">
+    <div id="preview-container">
         <div id="crosshair"></div>
         <video id="webcam" autoplay playsinline muted></video>
     </div>
 
-    <button id="freeze-btn">Capturar Color</button>
+    <div class="controls">
+        <button class="btn-capture" onclick="toggleFreeze()" id="freeze-btn">Capturar Color</button>
+        <button class="btn-add" onclick="registerPaint()">Registrar Pintura</button>
+    </div>
+
+    <div class="section-title">Mi Inventario (Local)</div>
+    <div class="inventory" id="inventory-list"></div>
 
     <div class="result-card">
-        <div id="color-preview"></div>
-        <div id="color-name">Detectando...</div>
-        <div id="rgb-label" style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">RGB: --</div>
-        
-        <div style="text-align: left; font-weight: 600; font-size: 0.9rem; color: var(--ios-blue);">MEZCLA SUGERIDA:</div>
-        <div class="recipe-grid" id="recipe-list">
-            </div>
+        <div id="target-name">
+            <div id="target-dot"></div>
+            Analizando...
+        </div>
+        <div id="recipe-output"></div>
     </div>
-</div>
 
-<canvas id="canvas" style="display:none;"></canvas>
+    <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('canvas');
-    const colorPreview = document.getElementById('color-preview');
-    const colorNameDisplay = document.getElementById('color-name');
-    const recipeList = document.getElementById('recipe-list');
-    const freezeBtn = document.getElementById('freeze-btn');
     let isFrozen = false;
-
-    // Base de datos de colores para nombrar
-    const colorDatabase = [
-        { name: "Rojo", r: 255, g: 0, b: 0 },
-        { name: "Verde Esmeralda", r: 0, g: 201, b: 87 },
-        { name: "Azul Marino", r: 0, g: 0, b: 128 },
-        { name: "Amarillo Limón", r: 255, g: 255, b: 0 },
-        { name: "Blanco", r: 255, g: 255, b: 255 },
-        { name: "Negro", r: 0, g: 0, b: 0 },
-        { name: "Gris", r: 128, g: 128, b: 128 },
-        { name: "Naranja", r: 255, g: 165, b: 0 },
-        { name: "Cian / Turquesa", r: 0, g: 255, b: 255 },
-        { name: "Magenta / Rosa", r: 255, g: 0, b: 255 },
-        { name: "Marrón / Café", r: 139, g: 69, b: 19 },
-        { name: "Ocre / Oro", r: 204, g: 153, b: 0 },
-        { name: "Verde Oliva", r: 107, g: 142, b: 35 },
-        { name: "Azul Cielo", r: 135, g: 206, b: 235 },
-        { name: "Beige", r: 245, g: 245, b: 220 },
-        { name: "Lila / Violeta", r: 182, g: 102, b: 210 }
+    
+    // 1. CARGAR DATOS: Intentar leer de localStorage o usar colores por defecto
+    let myPaints = JSON.parse(localStorage.getItem('myColorPalette')) || [
+        { name: "Verde", r: 34, g: 139, b: 34, active: true },
+        { name: "Azul", r: 0, g: 80, b: 180, active: true },
+        { name: "Amarillo", r: 255, g: 210, b: 0, active: true },
+        { name: "Blanco", r: 255, g: 255, b: 255, active: true },
+        { name: "Negro", r: 30, g: 30, b: 30, active: true }
     ];
 
     async function init() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" } 
+                video: { facingMode: "environment", width: 800, height: 800 } 
             });
             video.srcObject = stream;
-            video.play();
-            setInterval(analyze, 250);
-        } catch (e) { alert("Usa HTTPS para acceder a la cámara."); }
+            renderInventory();
+            setInterval(processFrame, 200);
+        } catch (e) { alert("Acceso denegado a la cámara. Usa HTTPS."); }
     }
 
-    function getColorName(r, g, b) {
-        let closest = colorDatabase[0];
-        let minDistance = Infinity;
-
-        colorDatabase.forEach(color => {
-            // Fórmula de distancia euclidiana para encontrar el color más cercano
-            const distance = Math.sqrt(
-                Math.pow(r - color.r, 2) + 
-                Math.pow(g - color.g, 2) + 
-                Math.pow(b - color.b, 2)
-            );
-            if (distance < minDistance) {
-                minDistance = distance;
-                closest = color;
-            }
-        });
-        return closest.name;
+    // 2. GUARDAR DATOS: Función para persistir en el móvil
+    function saveData() {
+        localStorage.setItem('myColorPalette', JSON.stringify(myPaints));
     }
 
-    function analyze() {
-        if (isFrozen) return;
+    function toggleFreeze() {
+        isFrozen = !isFrozen;
+        const btn = document.getElementById('freeze-btn');
+        btn.innerText = isFrozen ? "Continuar" : "Capturar Color";
+        btn.style.background = isFrozen ? "#8e8e93" : "var(--ios-blue)";
+    }
+
+    function registerPaint() {
+        const p = getCenterPixel();
+        const name = prompt("Nombre del color:", "Nueva Pintura");
+        if(name) {
+            myPaints.push({ name, r: p[0], g: p[1], b: p[2], active: true });
+            saveData(); // Guardar cambios
+            renderInventory();
+        }
+    }
+
+    function getCenterPixel() {
         const ctx = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
-        const p = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
-        const [r, g, b] = [p[0], p[1], p[2]];
-
-        colorPreview.style.backgroundColor = `rgb(${r},${g},${b})`;
-        document.getElementById('rgb-label').innerText = `RGB: ${r}, ${g}, ${b}`;
-        colorNameDisplay.innerText = getColorName(r, g, b);
-
-        // Lógica de mezcla simplificada para tus botes
-        let r_n = r/255, g_n = g/255, b_n = b/255;
-        let k = Math.round((1 - Math.max(r_n, g_n, b_n)) * 100);
-        let w = Math.round(Math.min(r_n, g_n, b_n) * 100);
-        let v = (g_n > r_n && g_n > b_n) ? Math.round(g_n * 70) : 0;
-        let az = (b_n > g_n) ? Math.round((1-r_n) * 40) : 0;
-        let am = (r_n > b_n && g_n > b_n) ? Math.round(g_n * 40) : 0;
-
-        recipeList.innerHTML = `
-            <div class="ingredient ing-verde">Verde <span>${v}%</span></div>
-            <div class="ingredient ing-azul">Azul <span>${az}%</span></div>
-            <div class="ingredient ing-amarillo">Amarillo <span>${am}%</span></div>
-            <div class="ingredient ing-negro">Negro <span>${k}%</span></div>
-            <div class="ingredient ing-blanco">Blanco <span>${w}%</span></div>
-        `;
+        return ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
     }
 
-    freezeBtn.addEventListener('click', () => {
-        isFrozen = !isFrozen;
-        freezeBtn.innerText = isFrozen ? "Continuar Cámara" : "Capturar Color";
-        freezeBtn.classList.toggle('active');
-    });
+    function renderInventory() {
+        const list = document.getElementById('inventory-list');
+        list.innerHTML = myPaints.map((p, i) => `
+            <div class="paint-chip ${p.active ? '' : 'disabled'}" onclick="togglePaint(${i})">
+                <button class="remove-btn" onclick="deletePaint(event, ${i})">✕</button>
+                <div class="paint-color" style="background: rgb(${p.r},${p.g},${p.b})"></div>
+                <div style="font-size:11px; font-weight:700; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</div>
+            </div>
+        `).join('');
+    }
+
+    function togglePaint(i) {
+        myPaints[i].active = !myPaints[i].active;
+        saveData(); // Guardar estado activo/inactivo
+        renderInventory();
+    }
+
+    function deletePaint(e, i) {
+        e.stopPropagation();
+        if(confirm(`¿Borrar "${myPaints[i].name}" de tu inventario?`)) {
+            myPaints.splice(i, 1);
+            saveData(); // Guardar tras borrar
+            renderInventory();
+        }
+    }
+
+    function processFrame() {
+        if (isFrozen) return;
+        const p = getCenterPixel();
+        const [r, g, b] = [p[0], p[1], p[2]];
+        
+        document.getElementById('target-dot').style.background = `rgb(${r},${g},${b})`;
+        
+        const activePaints = myPaints.filter(p => p.active);
+        const output = document.getElementById('recipe-output');
+        
+        if(activePaints.length === 0) {
+            output.innerHTML = "<p style='color:#888'>Activa pinturas para ver la mezcla.</p>";
+            return;
+        }
+
+        // Algoritmo de mezcla por pesos de color (Color Matching)
+        let weights = activePaints.map(paint => {
+            const diff = Math.sqrt(Math.pow(r-paint.r,2) + Math.pow(g-paint.g,2) + Math.pow(b-paint.b,2));
+            return { name: paint.name, weight: 1 / (diff + 0.1) };
+        });
+
+        const totalWeight = weights.reduce((a, b) => a + b.weight, 0);
+        output.innerHTML = weights
+            .map(w => ({ name: w.name, percent: Math.round((w.weight / totalWeight) * 100) }))
+            .filter(w => w.percent > 2) // Ocultar los que apenas influyen
+            .sort((a,b) => b.percent - a.percent)
+            .map(w => `
+                <div class="recipe-row">
+                    <span>${w.name}</span>
+                    <span style="color:var(--ios-blue)">${w.percent}%</span>
+                </div>
+            `).join('');
+    }
 
     init();
 </script>
