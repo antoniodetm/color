@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mezclador Pro - Guardado Local</title>
+    <title>Mezclador Fix - iPhone 12</title>
     <style>
-        :root { --ios-blue: #007AFF; --ios-red: #FF3B30; --bg: #f2f2f7; --ios-green: #34C759; }
+        :root { --ios-blue: #007AFF; --ios-green: #34C759; --bg: #f2f2f7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 15px 40px; }
         
@@ -16,42 +16,32 @@
         }
         video { width: 100%; height: 100%; object-fit: cover; }
         #crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 26px; height: 26px; 
-            border: 2.5px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5;
-            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; 
+            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5;
         }
 
-        .section-title { font-weight: 700; margin: 20px 0 10px; text-align: left; font-size: 1rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 8px; }
+        input[type="text"] { 
+            flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; 
+        }
         
-        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; margin-bottom: 10px; scrollbar-width: none; }
-        .inventory::-webkit-scrollbar { display: none; }
-        
+        button { border: none; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 15px; color: white; cursor: pointer; }
+        .btn-capture { background: var(--ios-blue); flex: 1; }
+        .btn-add { background: var(--ios-green); }
+        .btn-freeze { background: #8e8e93; }
+
+        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; }
         .paint-chip { 
-            min-width: 85px; background: white; padding: 12px; border-radius: 18px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; text-align: center;
-            transition: transform 0.2s;
+            min-width: 80px; background: white; padding: 10px; border-radius: 16px; 
+            position: relative; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .paint-chip:active { transform: scale(0.95); }
-        .paint-color { width: 45px; height: 45px; border-radius: 50%; margin: 0 auto 8px; border: 2px solid #f0f0f0; }
         .paint-chip.disabled { opacity: 0.3; filter: grayscale(1); }
-        
-        .remove-btn { 
-            position: absolute; top: -5px; right: -5px; background: var(--ios-red); 
-            color: white; border-radius: 50%; width: 24px; height: 24px; 
-            font-size: 14px; border: 2px solid white; font-weight: bold;
-        }
+        .paint-color { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 5px; border: 1px solid #eee; }
+        .remove-btn { position: absolute; top: -5px; right: -5px; background: #ff3b30; color: white; border-radius: 50%; width: 22px; height: 22px; border: 2px solid white; font-size: 12px; }
 
-        .result-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        #target-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        #target-dot { width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
-        
-        .recipe-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f5f5f5; font-weight: 600; font-size: 1.05rem; }
-
-        .controls { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 10px; }
-        button { border: none; padding: 16px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer; }
-        .btn-capture { background: var(--ios-blue); color: white; }
-        .btn-add { background: var(--ios-green); color: white; }
-        button:active { opacity: 0.8; }
+        .result-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .recipe-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -62,19 +52,17 @@
     </div>
 
     <div class="controls">
-        <button class="btn-capture" onclick="toggleFreeze()" id="freeze-btn">Capturar Color</button>
-        <button class="btn-add" onclick="registerPaint()">Registrar Pintura</button>
+        <div class="input-group">
+            <input type="text" id="paint-name" placeholder="Nombre pintura (ej. Azul)">
+            <button class="btn-add" onclick="registerPaint()">Registrar</button>
+        </div>
+        <button class="btn-freeze" id="freeze-btn" onclick="toggleFreeze()">Pausar Cámara</button>
     </div>
 
-    <div class="section-title">Mi Inventario (Local)</div>
     <div class="inventory" id="inventory-list"></div>
 
-    <div class="result-card">
-        <div id="target-name">
-            <div id="target-dot"></div>
-            Analizando...
-        </div>
-        <div id="recipe-output"></div>
+    <div class="result-card" id="recipe-output">
+        <p style="color:#888">Apunta a un color para ver la mezcla...</p>
     </div>
 
     <canvas id="canvas" style="display:none;"></canvas>
@@ -84,54 +72,42 @@
     const canvas = document.getElementById('canvas');
     let isFrozen = false;
     
-    // 1. CARGAR DATOS: Intentar leer de localStorage o usar colores por defecto
-    let myPaints = JSON.parse(localStorage.getItem('myColorPalette')) || [
-        { name: "Verde", r: 34, g: 139, b: 34, active: true },
-        { name: "Azul", r: 0, g: 80, b: 180, active: true },
-        { name: "Amarillo", r: 255, g: 210, b: 0, active: true },
+    // Carga inicial
+    let myPaints = JSON.parse(localStorage.getItem('myPaintsV2')) || [
         { name: "Blanco", r: 255, g: 255, b: 255, active: true },
-        { name: "Negro", r: 30, g: 30, b: 30, active: true }
+        { name: "Negro", r: 20, g: 20, b: 20, active: true }
     ];
 
     async function init() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: 800, height: 800 } 
+                video: { facingMode: "environment", width: { ideal: 640 } } 
             });
             video.srcObject = stream;
+            // Forzar play para evitar congelamiento en iOS
+            video.onloadedmetadata = () => video.play();
             renderInventory();
-            setInterval(processFrame, 200);
-        } catch (e) { alert("Acceso denegado a la cámara. Usa HTTPS."); }
-    }
-
-    // 2. GUARDAR DATOS: Función para persistir en el móvil
-    function saveData() {
-        localStorage.setItem('myColorPalette', JSON.stringify(myPaints));
-    }
-
-    function toggleFreeze() {
-        isFrozen = !isFrozen;
-        const btn = document.getElementById('freeze-btn');
-        btn.innerText = isFrozen ? "Continuar" : "Capturar Color";
-        btn.style.background = isFrozen ? "#8e8e93" : "var(--ios-blue)";
+            requestAnimationFrame(processLoop);
+        } catch (e) { alert("Error cámara: usa HTTPS."); }
     }
 
     function registerPaint() {
-        const p = getCenterPixel();
-        const name = prompt("Nombre del color:", "Nueva Pintura");
-        if(name) {
-            myPaints.push({ name, r: p[0], g: p[1], b: p[2], active: true });
-            saveData(); // Guardar cambios
-            renderInventory();
-        }
-    }
-
-    function getCenterPixel() {
+        const nameInput = document.getElementById('paint-name');
+        const name = nameInput.value.trim() || "Pintura " + (myPaints.length + 1);
+        
         const ctx = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
-        return ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+        const p = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+
+        myPaints.push({ name, r: p[0], g: p[1], b: p[2], active: true });
+        nameInput.value = ""; // Limpiar input
+        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
+        renderInventory();
+        
+        // Forzar re-inicio del video por si iOS lo pausó
+        video.play();
     }
 
     function renderInventory() {
@@ -140,58 +116,57 @@
             <div class="paint-chip ${p.active ? '' : 'disabled'}" onclick="togglePaint(${i})">
                 <button class="remove-btn" onclick="deletePaint(event, ${i})">✕</button>
                 <div class="paint-color" style="background: rgb(${p.r},${p.g},${p.b})"></div>
-                <div style="font-size:11px; font-weight:700; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</div>
+                <div style="font-size:10px; font-weight:700;">${p.name}</div>
             </div>
         `).join('');
     }
 
     function togglePaint(i) {
         myPaints[i].active = !myPaints[i].active;
-        saveData(); // Guardar estado activo/inactivo
+        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
         renderInventory();
     }
 
     function deletePaint(e, i) {
         e.stopPropagation();
-        if(confirm(`¿Borrar "${myPaints[i].name}" de tu inventario?`)) {
-            myPaints.splice(i, 1);
-            saveData(); // Guardar tras borrar
-            renderInventory();
-        }
+        myPaints.splice(i, 1);
+        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
+        renderInventory();
     }
 
-    function processFrame() {
-        if (isFrozen) return;
-        const p = getCenterPixel();
-        const [r, g, b] = [p[0], p[1], p[2]];
-        
-        document.getElementById('target-dot').style.background = `rgb(${r},${g},${b})`;
-        
-        const activePaints = myPaints.filter(p => p.active);
-        const output = document.getElementById('recipe-output');
-        
-        if(activePaints.length === 0) {
-            output.innerHTML = "<p style='color:#888'>Activa pinturas para ver la mezcla.</p>";
-            return;
-        }
+    function toggleFreeze() {
+        isFrozen = !isFrozen;
+        document.getElementById('freeze-btn').innerText = isFrozen ? "Reanudar Cámara" : "Pausar Cámara";
+        if (!isFrozen) video.play();
+    }
 
-        // Algoritmo de mezcla por pesos de color (Color Matching)
-        let weights = activePaints.map(paint => {
-            const diff = Math.sqrt(Math.pow(r-paint.r,2) + Math.pow(g-paint.g,2) + Math.pow(b-paint.b,2));
-            return { name: paint.name, weight: 1 / (diff + 0.1) };
+    function processLoop() {
+        if (!isFrozen && video.readyState === video.HAVE_ENOUGH_DATA) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = 100; // Resolución baja para el cálculo para que no se trabe
+            canvas.height = 100;
+            ctx.drawImage(video, 0, 0, 100, 100);
+            const p = ctx.getImageData(50, 50, 1, 1).data;
+            calculateMix(p[0], p[1], p[2]);
+        }
+        requestAnimationFrame(processLoop);
+    }
+
+    function calculateMix(r, g, b) {
+        const active = myPaints.filter(p => p.active);
+        const output = document.getElementById('recipe-output');
+        if (active.length === 0) return;
+
+        let weights = active.map(p => {
+            const d = Math.sqrt((r-p.r)**2 + (g-p.g)**2 + (b-p.b)**2);
+            return { name: p.name, w: 1 / (d + 1) };
         });
 
-        const totalWeight = weights.reduce((a, b) => a + b.weight, 0);
-        output.innerHTML = weights
-            .map(w => ({ name: w.name, percent: Math.round((w.weight / totalWeight) * 100) }))
-            .filter(w => w.percent > 2) // Ocultar los que apenas influyen
-            .sort((a,b) => b.percent - a.percent)
-            .map(w => `
-                <div class="recipe-row">
-                    <span>${w.name}</span>
-                    <span style="color:var(--ios-blue)">${w.percent}%</span>
-                </div>
-            `).join('');
+        const sum = weights.reduce((a, b) => a + b.w, 0);
+        output.innerHTML = `<div style="width:100%; height:10px; border-radius:5px; background:rgb(${r},${g},${b}); margin-bottom:15px;"></div>` + 
+            weights.map(w => ({ n: w.name, p: Math.round((w.w / sum) * 100) }))
+            .filter(x => x.p > 2).sort((a,b) => b.p - a.p)
+            .map(x => `<div class="recipe-row"><span>${x.n}</span><span style="color:var(--ios-blue)">${x.p}%</span></div>`).join('');
     }
 
     init();
