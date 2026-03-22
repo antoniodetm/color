@@ -3,66 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mezclador Fix - iPhone 12</title>
+    <title>Mezclador Compacto - iPhone 12</title>
     <style>
         :root { --ios-blue: #007AFF; --ios-green: #34C759; --bg: #f2f2f7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 15px 40px; }
         
+        body { 
+            font-family: -apple-system, system-ui; 
+            background: var(--bg); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* Cámara pequeña y centrada */
+        #camera-section {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         #preview-container { 
-            position: relative; width: 100%; aspect-ratio: 1; 
-            border-radius: 24px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 15px;
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        #crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; 
-            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5;
-        }
-
-        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .input-group { display: flex; gap: 8px; }
-        input[type="text"] { 
-            flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; 
+            position: relative; 
+            width: 180px; /* Tamaño reducido */
+            height: 180px; 
+            border-radius: 30px; 
+            overflow: hidden; 
+            background: #000; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
         
-        button { border: none; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 15px; color: white; cursor: pointer; }
-        .btn-capture { background: var(--ios-blue); flex: 1; }
-        .btn-add { background: var(--ios-green); }
-        .btn-freeze { background: #8e8e93; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        
+        #crosshair { 
+            position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; 
+            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); 
+            z-index: 5; box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
 
-        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; }
+        /* Panel inferior deslizante */
+        #bottom-panel {
+            flex: 1;
+            background: white;
+            border-radius: 35px 35px 0 0;
+            padding: 25px 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-group { display: flex; gap: 10px; }
+        input[type="text"] { 
+            flex: 1; padding: 14px; border-radius: 14px; border: 1px solid #e5e5ea; 
+            background: #f9f9f9; font-size: 16px; outline: none;
+        }
+        
+        button { border: none; padding: 14px; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; }
+        .btn-add { background: var(--ios-green); color: white; min-width: 100px; }
+        .btn-freeze { background: var(--ios-blue); color: white; width: 100%; }
+        .btn-freeze.active { background: #8e8e93; }
+
+        .section-title { font-weight: 700; font-size: 0.9rem; color: #8e8e93; text-transform: uppercase; margin-top: 10px; }
+
+        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; min-height: 110px; }
         .paint-chip { 
-            min-width: 80px; background: white; padding: 10px; border-radius: 16px; 
-            position: relative; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            min-width: 80px; background: #fff; padding: 12px; border-radius: 20px; 
+            position: relative; text-align: center; border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
         .paint-chip.disabled { opacity: 0.3; filter: grayscale(1); }
-        .paint-color { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 5px; border: 1px solid #eee; }
+        .paint-color { width: 35px; height: 35px; border-radius: 50%; margin: 0 auto 8px; border: 1px solid #eee; }
         .remove-btn { position: absolute; top: -5px; right: -5px; background: #ff3b30; color: white; border-radius: 50%; width: 22px; height: 22px; border: 2px solid white; font-size: 12px; }
 
-        .result-card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .recipe-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+        .result-box { 
+            background: #f2f2f7; padding: 18px; border-radius: 20px; margin-top: 10px;
+        }
+        .recipe-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e5ea; font-weight: 600; font-size: 1.1rem; }
+        .recipe-row:last-child { border: none; }
     </style>
 </head>
 <body>
 
-    <div id="preview-container">
-        <div id="crosshair"></div>
-        <video id="webcam" autoplay playsinline muted></video>
+    <div id="camera-section">
+        <div id="preview-container">
+            <div id="crosshair"></div>
+            <video id="webcam" autoplay playsinline muted></video>
+        </div>
     </div>
 
-    <div class="controls">
+    <div id="bottom-panel">
+        <button class="btn-freeze" id="freeze-btn" onclick="toggleFreeze()">Pausar Análisis</button>
+        
+        <div class="section-title">Añadir a mi paleta</div>
         <div class="input-group">
-            <input type="text" id="paint-name" placeholder="Nombre pintura (ej. Azul)">
+            <input type="text" id="paint-name" placeholder="Ej: Verde Hoja">
             <button class="btn-add" onclick="registerPaint()">Registrar</button>
         </div>
-        <button class="btn-freeze" id="freeze-btn" onclick="toggleFreeze()">Pausar Cámara</button>
-    </div>
 
-    <div class="inventory" id="inventory-list"></div>
+        <div class="section-title">Mis Pinturas</div>
+        <div class="inventory" id="inventory-list"></div>
 
-    <div class="result-card" id="recipe-output">
-        <p style="color:#888">Apunta a un color para ver la mezcla...</p>
+        <div class="section-title">Mezcla necesaria</div>
+        <div class="result-box" id="recipe-output">
+            <p style="text-align:center; color:#8e8e93; font-size: 0.9rem;">Analizando color en el visor...</p>
+        </div>
     </div>
 
     <canvas id="canvas" style="display:none;"></canvas>
@@ -72,23 +121,21 @@
     const canvas = document.getElementById('canvas');
     let isFrozen = false;
     
-    // Carga inicial
-    let myPaints = JSON.parse(localStorage.getItem('myPaintsV2')) || [
+    let myPaints = JSON.parse(localStorage.getItem('myPaintsV3')) || [
         { name: "Blanco", r: 255, g: 255, b: 255, active: true },
-        { name: "Negro", r: 20, g: 20, b: 20, active: true }
+        { name: "Negro", r: 25, g: 25, b: 25, active: true }
     ];
 
     async function init() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: { ideal: 640 } } 
+                video: { facingMode: "environment", width: 400, height: 400 } 
             });
             video.srcObject = stream;
-            // Forzar play para evitar congelamiento en iOS
             video.onloadedmetadata = () => video.play();
             renderInventory();
             requestAnimationFrame(processLoop);
-        } catch (e) { alert("Error cámara: usa HTTPS."); }
+        } catch (e) { alert("Error: Usa HTTPS y permite la cámara."); }
     }
 
     function registerPaint() {
@@ -102,12 +149,14 @@
         const p = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
 
         myPaints.push({ name, r: p[0], g: p[1], b: p[2], active: true });
-        nameInput.value = ""; // Limpiar input
-        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
-        renderInventory();
-        
-        // Forzar re-inicio del video por si iOS lo pausó
+        nameInput.value = "";
+        saveAndRender();
         video.play();
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('myPaintsV3', JSON.stringify(myPaints));
+        renderInventory();
     }
 
     function renderInventory() {
@@ -116,37 +165,38 @@
             <div class="paint-chip ${p.active ? '' : 'disabled'}" onclick="togglePaint(${i})">
                 <button class="remove-btn" onclick="deletePaint(event, ${i})">✕</button>
                 <div class="paint-color" style="background: rgb(${p.r},${p.g},${p.b})"></div>
-                <div style="font-size:10px; font-weight:700;">${p.name}</div>
+                <div style="font-size:10px; font-weight:800; color:#333; overflow:hidden;">${p.name}</div>
             </div>
         `).join('');
     }
 
     function togglePaint(i) {
         myPaints[i].active = !myPaints[i].active;
-        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
-        renderInventory();
+        saveAndRender();
     }
 
     function deletePaint(e, i) {
         e.stopPropagation();
-        myPaints.splice(i, 1);
-        localStorage.setItem('myPaintsV2', JSON.stringify(myPaints));
-        renderInventory();
+        if(confirm("¿Eliminar color?")) {
+            myPaints.splice(i, 1);
+            saveAndRender();
+        }
     }
 
     function toggleFreeze() {
         isFrozen = !isFrozen;
-        document.getElementById('freeze-btn').innerText = isFrozen ? "Reanudar Cámara" : "Pausar Cámara";
+        const btn = document.getElementById('freeze-btn');
+        btn.innerText = isFrozen ? "Reanudar Análisis" : "Pausar Análisis";
+        btn.classList.toggle('active', isFrozen);
         if (!isFrozen) video.play();
     }
 
     function processLoop() {
         if (!isFrozen && video.readyState === video.HAVE_ENOUGH_DATA) {
             const ctx = canvas.getContext('2d');
-            canvas.width = 100; // Resolución baja para el cálculo para que no se trabe
-            canvas.height = 100;
-            ctx.drawImage(video, 0, 0, 100, 100);
-            const p = ctx.getImageData(50, 50, 1, 1).data;
+            canvas.width = 50; canvas.height = 50;
+            ctx.drawImage(video, 0, 0, 50, 50);
+            const p = ctx.getImageData(25, 25, 1, 1).data;
             calculateMix(p[0], p[1], p[2]);
         }
         requestAnimationFrame(processLoop);
@@ -155,7 +205,10 @@
     function calculateMix(r, g, b) {
         const active = myPaints.filter(p => p.active);
         const output = document.getElementById('recipe-output');
-        if (active.length === 0) return;
+        if (active.length === 0) {
+            output.innerHTML = "<p style='text-align:center'>Activa colores abajo.</p>";
+            return;
+        }
 
         let weights = active.map(p => {
             const d = Math.sqrt((r-p.r)**2 + (g-p.g)**2 + (b-p.b)**2);
@@ -163,7 +216,7 @@
         });
 
         const sum = weights.reduce((a, b) => a + b.w, 0);
-        output.innerHTML = `<div style="width:100%; height:10px; border-radius:5px; background:rgb(${r},${g},${b}); margin-bottom:15px;"></div>` + 
+        output.innerHTML = `<div style="width:100%; height:8px; border-radius:10px; background:rgb(${r},${g},${b}); margin-bottom:12px; border:1px solid #ddd;"></div>` + 
             weights.map(w => ({ n: w.name, p: Math.round((w.w / sum) * 100) }))
             .filter(x => x.p > 2).sort((a,b) => b.p - a.p)
             .map(x => `<div class="recipe-row"><span>${x.n}</span><span style="color:var(--ios-blue)">${x.p}%</span></div>`).join('');
