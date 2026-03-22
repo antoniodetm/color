@@ -3,113 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mezclador Ergonómico - iPhone 12</title>
+    <title>Mezclador Detalle - iPhone 12</title>
     <style>
         :root { --ios-blue: #007AFF; --ios-green: #34C759; --bg: #f2f2f7; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
             font-family: -apple-system, system-ui; 
-            background: var(--bg); 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
+            background: var(--bg); margin: 0; display: flex; 
+            flex-direction: column; height: 100vh; 
             padding-top: env(safe-area-inset-top);
         }
 
-        /* Visor de cámara compacto */
+        /* Sección Cámara con Zoom */
         #camera-section {
-            padding: 15px;
+            padding: 10px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            background: var(--bg);
+            gap: 10px;
         }
 
         #preview-container { 
             position: relative; 
-            width: 150px; 
-            height: 150px; 
-            border-radius: 40px; 
-            overflow: hidden; 
-            background: #000; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 160px; height: 160px; 
+            border-radius: 45px; overflow: hidden; 
+            background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: 3px solid white;
         }
         
-        video { width: 100%; height: 100%; object-fit: cover; }
+        video { display: none; } /* El video se oculta, usamos el canvas para el zoom */
+        #zoom-canvas { width: 100%; height: 100%; object-fit: cover; }
         
         #crosshair { 
             position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; 
-            border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); 
+            border: 2px solid #34C759; border-radius: 50%; transform: translate(-50%, -50%); 
             z-index: 5; box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        /* Panel principal */
+        .zoom-controls { width: 100%; max-width: 200px; display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex: 1; accent-color: var(--ios-blue); }
+
+        /* Panel de Control */
         #bottom-panel {
-            flex: 1;
-            background: white;
-            border-radius: 35px 35px 0 0;
-            padding: 20px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex: 1; background: white; border-radius: 35px 35px 0 0;
+            padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
         }
 
         .btn-freeze { 
             border: none; padding: 14px; border-radius: 16px; 
             font-weight: 700; font-size: 15px; cursor: pointer;
-            background: var(--ios-blue); color: white; width: 100%; 
+            background: var(--ios-blue); color: white;
         }
-        .btn-freeze.active { background: #8e8e93; }
+        .btn-freeze.active { background: #FF9500; }
 
-        .section-title { 
-            font-weight: 700; font-size: 0.85rem; color: #8e8e93; 
-            text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;
-        }
+        .section-title { font-weight: 700; font-size: 0.8rem; color: #8e8e93; text-transform: uppercase; }
 
-        /* MEZCLA NECESARIA (Ahora arriba) */
-        .result-box { 
-            background: #f2f2f7; padding: 15px; border-radius: 20px; 
-        }
-        .recipe-row { 
-            display: flex; justify-content: space-between; padding: 10px 0; 
-            border-bottom: 1px solid #e5e5ea; font-weight: 600; font-size: 1.1rem; 
-        }
+        .result-box { background: #f2f2f7; padding: 15px; border-radius: 20px; }
+        .recipe-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e5ea; font-weight: 600; }
         .recipe-row:last-child { border: none; }
 
-        /* INVENTARIO Y REGISTRO (Ahora abajo) */
-        .inventory { 
-            display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; 
-            min-height: 105px; scrollbar-width: none;
-        }
+        .inventory { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; min-height: 100px; scrollbar-width: none; }
         .inventory::-webkit-scrollbar { display: none; }
-
-        .paint-chip { 
-            min-width: 80px; background: #fff; padding: 10px; border-radius: 20px; 
-            position: relative; text-align: center; border: 1px solid #f0f0f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
+        .paint-chip { min-width: 75px; background: #fff; padding: 10px; border-radius: 18px; position: relative; text-align: center; border: 1px solid #f0f0f0; }
         .paint-chip.disabled { opacity: 0.3; filter: grayscale(1); }
-        .paint-color { width: 35px; height: 35px; border-radius: 50%; margin: 0 auto 6px; border: 1px solid #eee; }
-        .remove-btn { 
-            position: absolute; top: -5px; right: -5px; background: #ff3b30; 
-            color: white; border-radius: 50%; width: 22px; height: 22px; 
-            border: 2px solid white; font-size: 12px; font-weight: bold;
-        }
-
-        .input-group { display: flex; gap: 8px; margin-top: 5px; }
-        input[type="text"] { 
-            flex: 1; padding: 14px; border-radius: 14px; border: 1px solid #e5e5ea; 
-            background: #f9f9f9; font-size: 16px; outline: none;
-        }
-        .btn-add { 
-            border: none; background: var(--ios-green); color: white; 
-            padding: 0 20px; border-radius: 14px; font-weight: 700; 
-        }
-
+        .paint-color { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 5px; border: 1px solid #eee; }
+        
+        .input-group { display: flex; gap: 8px; }
+        input[type="text"] { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 16px; }
+        .btn-add { border: none; background: var(--ios-green); color: white; padding: 0 15px; border-radius: 12px; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -117,70 +80,99 @@
     <div id="camera-section">
         <div id="preview-container">
             <div id="crosshair"></div>
-            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="zoom-canvas"></canvas>
         </div>
+        <div class="zoom-controls">
+            <span style="font-size:12px">1x</span>
+            <input type="range" id="zoom-slider" min="1" max="10" step="0.1" value="1">
+            <span style="font-size:12px">10x</span>
+        </div>
+        <video id="webcam" autoplay playsinline muted></video>
     </div>
 
     <div id="bottom-panel">
-        <button class="btn-freeze" id="freeze-btn" onclick="toggleFreeze()">Pausar Escaneo</button>
+        <button class="btn-freeze" id="freeze-btn" onclick="toggleFreeze()">Pausar Imagen</button>
         
-        <div class="section-title">Mezcla necesaria</div>
+        <div class="section-title">Mezcla para el detalle</div>
         <div class="result-box" id="recipe-output">
-            <p style="text-align:center; color:#8e8e93; font-size: 0.9rem;">Esperando color...</p>
+            <p style="text-align:center; color:#8e8e93;">Apunta al detalle...</p>
         </div>
 
         <div class="section-title">Mis Pinturas</div>
         <div class="inventory" id="inventory-list"></div>
 
-        <div class="section-title">Registrar nuevo bote</div>
+        <div class="section-title">Registrar color enfocado</div>
         <div class="input-group">
-            <input type="text" id="paint-name" placeholder="Nombre (ej. Azul)">
-            <button class="btn-add" onclick="registerPaint()">OK</button>
+            <input type="text" id="paint-name" placeholder="Nombre pintura">
+            <button class="btn-add" onclick="registerPaint()">Añadir</button>
         </div>
     </div>
 
-    <canvas id="canvas" style="display:none;"></canvas>
+    <canvas id="calc-canvas" style="display:none;"></canvas>
 
 <script>
     const video = document.getElementById('webcam');
-    const canvas = document.getElementById('canvas');
+    const zoomCanvas = document.getElementById('zoom-canvas');
+    const calcCanvas = document.getElementById('calc-canvas');
+    const zoomSlider = document.getElementById('zoom-slider');
     let isFrozen = false;
     
-    let myPaints = JSON.parse(localStorage.getItem('myPaintsV4')) || [
+    let myPaints = JSON.parse(localStorage.getItem('myPaintsV5')) || [
         { name: "Blanco", r: 255, g: 255, b: 255, active: true },
-        { name: "Negro", r: 35, g: 35, b: 35, active: true }
+        { name: "Negro", r: 40, g: 40, b: 40, active: true }
     ];
 
     async function init() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: 400, height: 400 } 
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
             video.srcObject = stream;
             video.onloadedmetadata = () => video.play();
             renderInventory();
-            requestAnimationFrame(processLoop);
-        } catch (e) { alert("Acceso denegado. Usa HTTPS."); }
+            requestAnimationFrame(renderLoop);
+        } catch (e) { alert("Error: Usa HTTPS y permite la cámara."); }
+    }
+
+    function renderLoop() {
+        if (!isFrozen && video.readyState === video.HAVE_ENOUGH_DATA) {
+            const z = parseFloat(zoomSlider.value);
+            const ctx = zoomCanvas.getContext('2d');
+            
+            // Ajustar tamaño del canvas de visualización
+            zoomCanvas.width = 300;
+            zoomCanvas.height = 300;
+
+            // Calcular área de recorte para el zoom
+            const sw = video.videoWidth / z;
+            const sh = video.videoHeight / z;
+            const sx = (video.videoWidth - sw) / 2;
+            const sy = (video.videoHeight - sh) / 2;
+
+            // Dibujar en el visor
+            ctx.drawImage(video, sx, sy, sw, sh, 0, 0, zoomCanvas.width, zoomCanvas.height);
+
+            // Analizar el pixel central del área con zoom
+            const p = ctx.getImageData(150, 150, 1, 1).data;
+            calculateMix(p[0], p[1], p[2]);
+        }
+        requestAnimationFrame(renderLoop);
     }
 
     function registerPaint() {
         const nameInput = document.getElementById('paint-name');
         const name = nameInput.value.trim() || "Color " + (myPaints.length + 1);
         
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-        const p = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+        const ctx = zoomCanvas.getContext('2d');
+        const p = ctx.getImageData(150, 150, 1, 1).data;
 
         myPaints.push({ name, r: p[0], g: p[1], b: p[2], active: true });
         nameInput.value = "";
         saveAndRender();
-        if (!isFrozen) video.play();
     }
 
     function saveAndRender() {
-        localStorage.setItem('myPaintsV4', JSON.stringify(myPaints));
+        localStorage.setItem('myPaintsV5', JSON.stringify(myPaints));
         renderInventory();
     }
 
@@ -188,9 +180,8 @@
         const list = document.getElementById('inventory-list');
         list.innerHTML = myPaints.map((p, i) => `
             <div class="paint-chip ${p.active ? '' : 'disabled'}" onclick="togglePaint(${i})">
-                <button class="remove-btn" onclick="deletePaint(event, ${i})">✕</button>
                 <div class="paint-color" style="background: rgb(${p.r},${p.g},${p.b})"></div>
-                <div style="font-size:10px; font-weight:800; color:#333; white-space:nowrap; overflow:hidden;">${p.name}</div>
+                <div style="font-size:10px; font-weight:800; color:#333;">${p.name}</div>
             </div>
         `).join('');
     }
@@ -200,51 +191,27 @@
         saveAndRender();
     }
 
-    function deletePaint(e, i) {
-        e.stopPropagation();
-        if(confirm("¿Eliminar este color de tu inventario?")) {
-            myPaints.splice(i, 1);
-            saveAndRender();
-        }
-    }
-
     function toggleFreeze() {
         isFrozen = !isFrozen;
         const btn = document.getElementById('freeze-btn');
-        btn.innerText = isFrozen ? "Reanudar Escaneo" : "Pausar Escaneo";
+        btn.innerText = isFrozen ? "Continuar" : "Pausar Imagen";
         btn.classList.toggle('active', isFrozen);
-        if (!isFrozen) video.play();
-    }
-
-    function processLoop() {
-        if (!isFrozen && video.readyState === video.HAVE_ENOUGH_DATA) {
-            const ctx = canvas.getContext('2d');
-            canvas.width = 40; canvas.height = 40;
-            ctx.drawImage(video, 0, 0, 40, 40);
-            const p = ctx.getImageData(20, 20, 1, 1).data;
-            calculateMix(p[0], p[1], p[2]);
-        }
-        requestAnimationFrame(processLoop);
     }
 
     function calculateMix(r, g, b) {
         const active = myPaints.filter(p => p.active);
         const output = document.getElementById('recipe-output');
-        if (active.length === 0) {
-            output.innerHTML = "<p style='text-align:center; color:#8e8e93;'>Activa colores en tu inventario abajo.</p>";
-            return;
-        }
+        if (active.length === 0) return;
 
-        // Algoritmo de mezcla por proximidad cromática
         let weights = active.map(p => {
             const d = Math.sqrt((r-p.r)**2 + (g-p.g)**2 + (b-p.b)**2);
             return { name: p.name, w: 1 / (d + 0.1) };
         });
 
         const sum = weights.reduce((a, b) => a + b.w, 0);
-        output.innerHTML = `<div style="width:100%; height:12px; border-radius:10px; background:rgb(${r},${g},${b}); margin-bottom:10px; border:1px solid rgba(0,0,0,0.1);"></div>` + 
+        output.innerHTML = `<div style="width:100%; height:12px; border-radius:10px; background:rgb(${r},${g},${b}); margin-bottom:10px; border:1px solid #ddd;"></div>` + 
             weights.map(w => ({ n: w.name, p: Math.round((w.w / sum) * 100) }))
-            .filter(x => x.p > 1).sort((a,b) => b.p - a.p)
+            .filter(x => x.p > 2).sort((a,b) => b.p - a.p)
             .map(x => `<div class="recipe-row"><span>${x.n}</span><span style="color:var(--ios-blue)">${x.p}%</span></div>`).join('');
     }
 
